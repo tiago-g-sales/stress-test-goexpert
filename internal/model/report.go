@@ -1,8 +1,11 @@
 package model
 
+import "time"
+
 
 type ReportTotalInfo struct {
-	TempoTotal 		float64
+	TimeInitial 	time.Time
+	TimeTotal 		time.Duration
 	RequestTotal 	int64
 	Status200  		int64
 	StatusNOK 	    []StatusNOK

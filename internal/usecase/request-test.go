@@ -10,30 +10,21 @@ import (
 )
 
 func Execute(m model.ParameterRequestDTO) {
-	timeInit := time.Now()	
 	report := model.ReportTotalInfo{}
+	report.TimeInitial = time.Now()
+	
 	ch := make(chan int)
 	wg := sync.WaitGroup{}
 	wg.Add(int(m.Requests))	
-	var totalLista int64
+
 	
 	go request(m, ch )
 	for i := int64(1); i <= m.Concurrency; i++ {
 	 	go	ExecuteConcurrency(&i,  m.Url, &report, &wg,ch)
 	}
 	wg.Wait()
-	timeFinish := time.Now()
-	report.TempoTotal = float64(timeFinish.Sub(timeInit).Seconds())   	
-
-	for _, v := range report.StatusNOK {	
-		totalLista += v.Count
-	}
-
-	fmt.Printf("Tempo Total Execução--------: %f \n", report.TempoTotal)
-	fmt.Printf("Total Requests--------------: %d \n", report.RequestTotal)
-	fmt.Printf("Total Requests HTTP 200-----: %d \n", report.Status200)	
-	fmt.Printf("Total Requests HTTP outros---: %d \n", totalLista)
-
+	
+	Report(report)
 
 
 }
@@ -42,7 +33,6 @@ func Execute(m model.ParameterRequestDTO) {
 
 
 func ExecuteConcurrency(i *int64, m string, report  *model.ReportTotalInfo, wg *sync.WaitGroup,  ch chan int)  {
-	fmt.Printf("Executing goroutine %d \n", uint64(*i))
 
 	for i := range ch {
 		req, err := http.NewRequest("GET", m, nil)
@@ -79,3 +69,17 @@ func request(m model.ParameterRequestDTO,  ch chan int) {
 	
 	
 }
+
+func Report(report model.ReportTotalInfo){
+
+	timeFinish := time.Now()
+	//listaNOK := []model.StatusNOK{}
+
+	report.TimeTotal = timeFinish.Sub(report.TimeInitial)   	
+
+	fmt.Printf("Tempo Total Execução Segundos-: %d \n", int(report.TimeTotal.Seconds()))
+	fmt.Printf("Total Requests----------------: %d \n", report.RequestTotal)
+	fmt.Printf("Total Requests HTTP 200-------: %d \n", report.Status200)	
+	fmt.Printf("Total Requests HTTP outros----: %d \n", len(report.StatusNOK))
+}
+
